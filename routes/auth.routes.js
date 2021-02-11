@@ -51,4 +51,37 @@ router.post('/signup', async (req, res) => {
     }
 });
 
+router.get('/login', (_req, res) => {
+    res.render('auth/login');
+});
+
+router.post('/login', async (req, res) => {
+    const {username, password} = req.body;
+
+    if (!username || !password) {
+        res.render('auth/login', {errorMessage: 'Please fill both fields: username and password'});
+
+        return;
+    }
+
+    const user = await User.findOne({username: username});
+    if(!user) {
+        res.render('auth/login', {errorMessage: 'invalid username and password combination'});
+
+        return;
+    }
+
+    if(bcrypt.compareSync(password, user.password)) {
+        req.session.currentUser = user;
+        res.redirect('/');
+    } else {
+        res.render('auth/login', {errorMessage: 'Invalid login'});
+    }
+});
+
+router.post('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/');
+});
+
 module.exports = router;
